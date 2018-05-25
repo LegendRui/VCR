@@ -8,6 +8,7 @@ Created on 2018-05-25
 reference:
 [1]https://www.cnblogs.com/lijunjiang2015/p/7812996.html
 [2]https://blog.csdn.net/huachao1001/article/details/78501928
+[3]http://www.jb51.net/article/134623.htm
 '''
 
 import generate_train_imgs as gti
@@ -21,8 +22,9 @@ cv2.destroyAllWindows()
 
 bin_img = gti.get_bin_img(img)
 sub_imgs = gti.img_split(bin_img)
+
 for sub_img in sub_imgs:
-    cv2.imshow('sub_img', sub_img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    sub_img = cv2.resize(sub_img, (28, 28), interpolation=cv2.INTER_CUBIC)
+
+
 

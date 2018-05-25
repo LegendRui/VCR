@@ -8,13 +8,14 @@ Created on 2018-05-24
 reference: 
 [1]http://www.cnblogs.com/jyxbk/p/7773304.html
 [2]https://zhuanlan.zhihu.com/p/33739734
+[3]https://blog.csdn.net/huachao1001/article/details/78501928
 '''
 import os
 import numpy as np
 import tensorflow as tf
 import cv2
 
-DEBUG = True
+DEBUG = False
 
 
 # count the number of images
@@ -87,8 +88,8 @@ keep_prob = tf.placeholder(tf.float32)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 # readout layer
-W_fc2 = tf.Variable(tf.truncated_normal([1024, 10], stddev=0.1))
-b_fc2 = tf.Variable(tf.constant(0.1, shape=[10]))
+W_fc2 = tf.Variable(tf.truncated_normal([1024, num_of_class], stddev=0.1))
+b_fc2 = tf.Variable(tf.constant(0.1, shape=[num_of_class]))
 
 y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
@@ -98,6 +99,7 @@ train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+saver = tf.train.Saver()
 with tf.Session() as sess:
 	sess.run(tf.global_variables_initializer())
 	print "read {0} input images, {1} labels".format(num_of_train_image, num_of_train_image)
@@ -137,3 +139,4 @@ with tf.Session() as sess:
 				break
 
 	print 'Training completed!'
+	saver.save(sess, './model/model')

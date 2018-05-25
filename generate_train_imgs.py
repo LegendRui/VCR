@@ -125,7 +125,7 @@ def img_split(img):
 		x_begin, x_end = split_points[index] - 1, split_points[index + 1] + 1
 		# print x_begin, x_end
 		sub_img = img[:, x_begin : x_end]
-		sub_img = cv2.resize(sub_img, (h, 18), interpolation=cv2.INTER_CUBIC)
+		sub_img = cv2.resize(sub_img, (28, 28), interpolation=cv2.INTER_CUBIC)
 		sub_imgs.append(sub_img)
 		index += 2
 
@@ -141,13 +141,13 @@ def generate_train_imgs():
 			# cv2.imshow('sub_img', sub_img)
 			# cv2.waitKey(0)
 			# cv2.destroyAllWindows()
-			if not os.path.exists('./train/charcter_' + ch):
+			if not os.path.exists('./train_image/charcter_' + ch):
 				if DEBUG:
-					print "making dir:" + './train/charcter_' + ch
-				os.mkdir('./train/charcter_' + ch)
+					print "making dir:" + './train_image/charcter_' + ch
+				os.mkdir('./train_image/charcter_' + ch)
 
-			cv2.imwrite('./train/charcter_' + ch + '/' + img_name.split('.')[0] + '_' + ch + '.jpg', sub_img)
-			print 'saving ' + img_name.split('.')[0] + '_' + ch + '.jpg to ' + './train/charcter_' + ch + '/'
+			cv2.imwrite('./train_image/charcter_' + ch + '/' + img_name.split('.')[0] + '_' + ch + '.jpg', sub_img)
+			print 'saving ' + img_name.split('.')[0] + '_' + ch + '.jpg to ' + './train_image/charcter_' + ch + '/'
 		# print ''
 
 def main():

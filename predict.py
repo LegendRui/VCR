@@ -9,6 +9,7 @@ reference:
 [1]https://www.cnblogs.com/lijunjiang2015/p/7812996.html
 [2]https://blog.csdn.net/huachao1001/article/details/78501928
 [3]http://www.jb51.net/article/134623.htm
+[4]https://github.com/gzdaijie/tensorflow-tutorial-samples/tree/master/mnist/v3
 '''
 
 import generate_train_imgs as gti

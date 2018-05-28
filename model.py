@@ -110,15 +110,17 @@ class Lenet(object):
 
 		self.y_conv = tf.matmul(self.h_fc1_drop, self.W_fc2) + self.b_fc2
 
-	def train(self):
-		# define optimizer and training op
-		cross_entropy = tf.reduce_mean(
+		self.cross_entropy = tf.reduce_mean(
 			tf.nn.softmax_cross_entropy_with_logits(
 				labels=self.y_, logits=self.y_conv))
-		train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
-		correct_prediction = tf.equal(tf.argmax(
+		self.train_step = tf.train.AdamOptimizer((1e-4)).minimize(self.cross_entropy)
+		self.correct_prediction = tf.equal(tf.argmax(
 				self.y_conv, 1), tf.argmax(self.y_, 1))
-		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+		self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+
+	def train(self):
+		# define optimizer and training op
+		
 
 		saver = tf.train.Saver()
 		with tf.Session() as self.sess:
@@ -208,9 +210,9 @@ class Lenet(object):
 
 if __name__ == '__main__':
 	cnn = Lenet()
-	cnn.read_train_image()
+	# cnn.read_train_image()
 	cnn.build_net()
-	cnn.train()
+	# cnn.train()
 	cnn.restore()
 	img = cv2.imread('./test/1RRX.bmp', cv2.IMREAD_GRAYSCALE)
 	r = cnn.predict(img)

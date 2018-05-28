@@ -19,6 +19,10 @@ import numpy as np
 import cv2
 import os
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
 class Lenet(object):
 	def __init__(self):
 		self.num_of_train_image = 0
@@ -31,6 +35,8 @@ class Lenet(object):
 		sub_path = os.listdir(self.test_image_path)
 		for sp in sub_path:
 			self.labels.append(sp[-1])
+		sub_train_image_path = os.listdir(self.train_image_path)
+		self.num_of_class = len(sub_train_image_path)
 		# self.read_train_image()
 		# self.net()
 		# self.train()
@@ -66,6 +72,7 @@ class Lenet(object):
 				index += 1
 
 	def build_net(self):
+
 		self.x = tf.placeholder(tf.float32, shape=[None, 28 * 28])
 		self.y_ = tf.placeholder(tf.float32, shape=[None, self.num_of_class])
 
@@ -110,21 +117,22 @@ class Lenet(object):
 
 		self.y_conv = tf.matmul(self.h_fc1_drop, self.W_fc2) + self.b_fc2
 
-		self.cross_entropy = tf.reduce_mean(
+		# define optimizer and training op
+		cross_entropy = tf.reduce_mean(
 			tf.nn.softmax_cross_entropy_with_logits(
 				labels=self.y_, logits=self.y_conv))
-		self.train_step = tf.train.AdamOptimizer((1e-4)).minimize(self.cross_entropy)
-		self.correct_prediction = tf.equal(tf.argmax(
+		self.train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
+		correct_prediction = tf.equal(tf.argmax(
 				self.y_conv, 1), tf.argmax(self.y_, 1))
-		self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+		self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-	def train(self):
-		# define optimizer and training op
 		
+	def train(self):
+	
 
 		saver = tf.train.Saver()
-		with tf.Session() as self.sess:
-			self.sess.run(tf.global_variables_initializer())
+		with tf.Session() as sess:
+			sess.run(tf.global_variables_initializer())
 			print "read {0} input images, {1} labels".format(
 				self.num_of_train_image, self.num_of_class)
 
@@ -141,7 +149,7 @@ class Lenet(object):
 			for it in range(iterations):
 				# change input array to np.array
 				for n in range(batches_count):
-					train_step.run(
+					self.train_step.run(
 						feed_dict={self.x: self.input_images[n * batch_size : \
 															(n + 1) * batch_size],
 									self.y_: self.input_labels[n * batch_size: \
@@ -149,7 +157,7 @@ class Lenet(object):
 									self.keep_prob: 0.5})
 				if remainder > 0:
 					start_index = batches_count * batch_size
-					train_step.run(
+					self.train_step.run(
 						feed_dict={self.x: self.input_images[start_index : \
 														self.num_of_train_image - 1],
 									self.y_: self.input_labels[start_index :\
@@ -160,7 +168,7 @@ class Lenet(object):
 				# if true, quit the iteration loop
 				iterate_accuracy = 0
 				if it % 5 == 0:
-					iterate_accuracy = accuracy.eval(
+					iterate_accuracy = self.accuracy.eval(
 						feed_dict={self.x: self.input_images, 
 									self.y_: self.input_labels, 
 									self.keep_prob: 1.0})
@@ -170,15 +178,16 @@ class Lenet(object):
 						break
 
 			print 'Training completed!'
-			saver.save(self.sess, self.model_path + '/model')
+			saver.save(sess, self.model_path + '/model')
 
 	def restore(self):
 		saver = tf.train.Saver()
 		with tf.Session() as self.sess:
+		# sess = tf.Session()
 			self.sess.run(tf.global_variables_initializer())
 			ckpt = tf.train.get_checkpoint_state(self.model_path)
 			if ckpt and ckpt.model_checkpoint_path:
-				saver.restore(self.sess, ckpt.model_checkpoint_path)
+				saver.restore( self.sess, ckpt.model_checkpoint_path)
 
 	def predict(self, img):
 		bin_img = gti.get_bin_img(img)
@@ -197,7 +206,7 @@ class Lenet(object):
 					else:
 						input_images[index][w + h * width] = 1
 			index += 1
-		y = sess.run(self.y_conv,
+		y = self.sess.run(self.y_conv,
 					feed_dict={self.x: input_images,
 								self.keep_prob: 0.5})
 		ret = []
@@ -210,10 +219,10 @@ class Lenet(object):
 
 if __name__ == '__main__':
 	cnn = Lenet()
-	# cnn.read_train_image()
+	cnn.read_train_image()
 	cnn.build_net()
-	# cnn.train()
+	cnn.train()
 	cnn.restore()
-	img = cv2.imread('./test/1RRX.bmp', cv2.IMREAD_GRAYSCALE)
+	img = cv2.imread('./test/00CB.bmp', cv2.IMREAD_GRAYSCALE)
 	r = cnn.predict(img)
 	print r

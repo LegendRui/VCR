@@ -13,7 +13,7 @@ reference:
 '''
 
 
-# import generate_train_imgs as gti
+import generate_train_imgs as gti
 import tensorflow as tf
 import numpy as np
 import cv2
@@ -25,10 +25,15 @@ class Lenet(object):
 		self.num_of_class = 0
 		self.train_image_path = './train_image/'
 		self.test_image_path = './test/'
+		self.model_path = './model'
 
-		self.read_train_image()
-		self.net()
-		self.train()
+		self.labels=[]
+		sub_path = os.listdir(self.test_image_path)
+		for sp in sub_path:
+			self.labels.append(sp[-1])
+		# self.read_train_image()
+		# self.net()
+		# self.train()
 
 	def read_train_image(self):
 		sub_train_image_path = os.listdir(self.train_image_path)
@@ -60,7 +65,7 @@ class Lenet(object):
 				self.input_labels[index][i] = 1
 				index += 1
 
-	def net(self):
+	def build_net(self):
 		self.x = tf.placeholder(tf.float32, shape=[None, 28 * 28])
 		self.y_ = tf.placeholder(tf.float32, shape=[None, self.num_of_class])
 
@@ -123,12 +128,12 @@ class Lenet(object):
 
 			# set number of inputs and iterations of each train
 			batch_size = 60
-			iterations = 100
+			iterations = 5
 			batches_count = int(self.num_of_train_image / batch_size)
 			remainder = self.num_of_train_image % batch_size
-			print "seperate the data set to {0} parts. " + \
+			print ("seperate the data set to {0} parts. " + \
 					"The first {1} parts include {2} datas, " + \
-					"and the last one includes {3} datas.".format(
+					"and the last one includes {3} datas.").format(
 						batches_count+1, batches_count, batch_size, remainder)
 			# train
 			for it in range(iterations):
@@ -163,9 +168,50 @@ class Lenet(object):
 						break
 
 			print 'Training completed!'
-			saver.save(self.sess, './model/model')
+			saver.save(self.sess, self.model_path + '/model')
 
+	def restore(self):
+		saver = tf.train.Saver()
+		with tf.Session() as self.sess:
+			self.sess.run(tf.global_variables_initializer())
+			ckpt = tf.train.get_checkpoint_state(self.model_path)
+			if ckpt and ckpt.model_checkpoint_path:
+				saver.restore(self.sess, ckpt.model_checkpoint_path)
+
+	def predict(self, img):
+		bin_img = gti.get_bin_img(img)
+		sub_imgs = gti.img_split(bin_img)
+
+		input_images = np.array([[0] * 28 * 28 for i in range(len(sub_imgs))])
+
+		index = 0
+		for sub_img in sub_imgs:
+			sub_img = cv2.resize(sub_img, (28, 28), interpolation=cv2.INTER_CUBIC)
+			height, width = sub_img.shape[:2]
+			for h in range(height):
+				for w in range(width):
+					if sub_img[h, w] > 230:
+						input_images[index][w + h * width] = 0
+					else:
+						input_images[index][w + h * width] = 1
+			index += 1
+		y = sess.run(self.y_conv,
+					feed_dict={self.x: input_images,
+								self.keep_prob: 0.5})
+		ret = []
+		ret.append(self.labels[np.argmax(y[0])])
+		ret.append(self.labels[np.argmax(y[1])])
+		ret.append(self.labels[np.argmax(y[2])])
+		ret.append(self.labels[np.argmax(y[3])])
+		return ret
 
 
 if __name__ == '__main__':
 	cnn = Lenet()
+	cnn.read_train_image()
+	cnn.build_net()
+	cnn.train()
+	cnn.restore()
+	img = cv2.imread('./test/1RRX.bmp', cv2.IMREAD_GRAYSCALE)
+	r = cnn.predict(img)
+	print r

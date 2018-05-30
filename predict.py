@@ -10,6 +10,7 @@ reference:
 [2]https://blog.csdn.net/huachao1001/article/details/78501928
 [3]http://www.jb51.net/article/134623.htm
 [4]https://github.com/gzdaijie/tensorflow-tutorial-samples/tree/master/mnist/v3
+[5]https://juejin.im/post/5adc945e518825673027bbfb
 '''
 
 
@@ -118,14 +119,11 @@ def predict(img):
 		ret.append(labels[np.argmax(y[1])])
 		ret.append(labels[np.argmax(y[2])])
 		ret.append(labels[np.argmax(y[3])])
+		saver.save(sess, './model/model')
 	return ret
 		
 
 def main():
-
-	
-
-
 
 	for test_img_dir in os.listdir('./test/'):
 		print './test/' + test_img_dir

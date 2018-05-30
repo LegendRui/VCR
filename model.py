@@ -131,8 +131,8 @@ class Lenet(object):
 	
 
 		saver = tf.train.Saver()
-		with tf.Session() as sess:
-			sess.run(tf.global_variables_initializer())
+		with tf.Session() as self.sess:
+			self.sess.run(tf.global_variables_initializer())
 			print "read {0} input images, {1} labels".format(
 				self.num_of_train_image, self.num_of_class)
 
@@ -178,18 +178,19 @@ class Lenet(object):
 						break
 
 			print 'Training completed!'
-			saver.save(sess, self.model_path + '/model')
+			saver.save(self.sess, self.model_path + '/model')
 
-	def restore(self):
-		saver = tf.train.Saver()
-		with tf.Session() as self.sess:
-		# sess = tf.Session()
-			self.sess.run(tf.global_variables_initializer())
-			ckpt = tf.train.get_checkpoint_state(self.model_path)
-			if ckpt and ckpt.model_checkpoint_path:
-				saver.restore( self.sess, ckpt.model_checkpoint_path)
-
+	# def restore(self):
 	def predict(self, img):
+		self.saver = tf.train.Saver()
+		#with tf.Session() as self.sess:
+		self.sess = tf.Session()
+		self.sess.run(tf.global_variables_initializer())
+		ckpt = tf.train.get_checkpoint_state(self.model_path)
+		if ckpt and ckpt.model_checkpoint_path:
+				self.saver.restore( self.sess, ckpt.model_checkpoint_path)
+
+	
 		bin_img = gti.get_bin_img(img)
 		sub_imgs = gti.img_split(bin_img)
 
@@ -209,6 +210,9 @@ class Lenet(object):
 		y = self.sess.run(self.y_conv,
 					feed_dict={self.x: input_images,
 								self.keep_prob: 0.5})
+
+		# self.saver.save(self.sess, self.model_path + '/model')
+
 		ret = []
 		ret.append(self.labels[np.argmax(y[0])])
 		ret.append(self.labels[np.argmax(y[1])])
@@ -219,10 +223,10 @@ class Lenet(object):
 
 if __name__ == '__main__':
 	cnn = Lenet()
-	# cnn.read_train_image()
+	cnn.read_train_image()
 	cnn.build_net()
-	# cnn.train()
-	cnn.restore()
+	cnn.train()
+	# cnn.restore()
 	img = cv2.imread('./test/00CB.bmp', cv2.IMREAD_GRAYSCALE)
 	r = cnn.predict(img)
 	print r

@@ -138,7 +138,7 @@ class Lenet(object):
 
 			# set number of inputs and iterations of each train
 			batch_size = 60
-			iterations = 5
+			iterations = 100
 			batches_count = int(self.num_of_train_image / batch_size)
 			remainder = self.num_of_train_image % batch_size
 			print ("seperate the data set to {0} parts. " + \
@@ -219,9 +219,9 @@ class Lenet(object):
 
 if __name__ == '__main__':
 	cnn = Lenet()
-	cnn.read_train_image()
+	# cnn.read_train_image()
 	cnn.build_net()
-	cnn.train()
+	# cnn.train()
 	cnn.restore()
 	img = cv2.imread('./test/00CB.bmp', cv2.IMREAD_GRAYSCALE)
 	r = cnn.predict(img)

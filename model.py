@@ -32,8 +32,9 @@ class Lenet(object):
 		self.model_path = './model'
 
 		self.labels=[]
-		sub_path = os.listdir(self.test_image_path)
+		sub_path = os.listdir(self.train_image_path)
 		for sp in sub_path:
+			# print sp
 			self.labels.append(sp[-1])
 		sub_train_image_path = os.listdir(self.train_image_path)
 		self.num_of_class = len(sub_train_image_path)
@@ -180,17 +181,53 @@ class Lenet(object):
 			print 'Training completed!'
 			saver.save(self.sess, self.model_path + '/model')
 
-	# def restore(self):
-	def predict(self, img):
-		self.saver = tf.train.Saver()
-		#with tf.Session() as self.sess:
+	def load_model(self):
+		self.sess = tf.Session()
+		self.new_saver = tf.train.import_meta_graoh('./model/model.meta')
+		self.new_saver.restore(sess, './model')
+
+	def predict_v2(self, img):
+		bin_img = gti.get_bin_img(img)
+		sub_imgs = gti.img_split(bin_img)
+
+		input_images = np.array([[0] * 28 * 28 for i in range(len(sub_imgs))])
+
+		index = 0
+		for sub_img in sub_imgs:
+			sub_img = cv2.resize(sub_img, (28, 28), interpolation=cv2.INTER_CUBIC)
+			height, width = sub_img.shape[:2]
+			for h in range(height):
+				for w in range(width):
+					if sub_img[h, w] > 230:
+						input_images[index][w + h * width] = 0
+					else:
+						input_images[index][w + h * width] = 1
+			index += 1
+		y = self.sess.run(self.y_conv,
+					feed_dict={self.x: input_images,
+								self.keep_prob: 0.5})
+
+		# self.saver.save(self.sess, self.model_path + '/model')
+
+		ret = []
+		ret.append(self.labels[np.argmax(y[0])])
+		ret.append(self.labels[np.argmax(y[1])])
+		ret.append(self.labels[np.argmax(y[2])])
+		ret.append(self.labels[np.argmax(y[3])])
+		return ret
+
+
+	def restore(self):
+	
+		saver = tf.train.Saver()
+		# with tf.Session() as self.sess:
 		self.sess = tf.Session()
 		self.sess.run(tf.global_variables_initializer())
 		ckpt = tf.train.get_checkpoint_state(self.model_path)
 		if ckpt and ckpt.model_checkpoint_path:
-				self.saver.restore( self.sess, ckpt.model_checkpoint_path)
+				saver.restore( self.sess, ckpt.model_checkpoint_path)
 
-	
+	def predict(self, img):
 		bin_img = gti.get_bin_img(img)
 		sub_imgs = gti.img_split(bin_img)
 
@@ -223,10 +260,34 @@ class Lenet(object):
 
 if __name__ == '__main__':
 	cnn = Lenet()
-	cnn.read_train_image()
+	# cnn.read_train_image()
 	cnn.build_net()
-	cnn.train()
-	# cnn.restore()
-	img = cv2.imread('./test/00CB.bmp', cv2.IMREAD_GRAYSCALE)
-	r = cnn.predict(img)
-	print r
+	# cnn.train()
+	cnn.restore()
+	# img = cv2.imread('./test/766Q.bmp', cv2.IMREAD_GRAYSCALE)
+	# r = cnn.predict(img)
+	# print r
+
+	# img = cv2.imread('./test/1RRX.bmp', cv2.IMREAD_GRAYSCALE)
+	# r = cnn.predict(img)
+	# print r
+	sum = 0
+	err = 0
+	error_image_names = []
+	test_image_name_list = os.listdir(cnn.test_image_path)
+	for test_image_name in test_image_name_list:
+		img = cv2.imread(cnn.test_image_path + test_image_name, cv2.IMREAD_GRAYSCALE)
+		rst = cnn.predict(img)
+		sum += 4
+		for i in range(len(rst)):
+			if rst[i] != test_image_name[i]:
+				err += 1
+				if test_image_name not in error_image_names:
+					error_image_names.append(test_image_name)
+		print "The " + test_image_name + " is supposed to be {0} {1} {2} {3}".format(
+				rst[0], rst[1], rst[2], rst[3])
+
+	print "We predict {0} images, and there are(is) {1} mistake(s).".format(
+			sum/4, err)
+	for error_image_name in error_image_names:
+		print error_image_name
